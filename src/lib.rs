@@ -5,6 +5,6 @@ mod set;
 #[cfg(test)]
 mod test;
 
-pub use cache::{clear, footprint, size};
+pub use cache::{clear, entries, footprint, purge_stale, size};
 pub use get::get;
 pub use set::set;
