@@ -37,6 +37,39 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn get_scalar_types() {
+        let key = nanoid::nanoid!();
+        let val = format!("some_string_{}", nanoid::nanoid!());
+        set(&key, &val, 60_000).await;
+        assert_eq!(get(&key).await, Some(val));
+
+        let key = nanoid::nanoid!();
+        let val = 8;
+        set(&key, &val, 60_000).await;
+        assert_eq!(get(&key).await, Some(val));
+
+        let key = nanoid::nanoid!();
+        let val = true;
+        set(&key, &val, 60_000).await;
+        assert_eq!(get(&key).await, Some(val));
+
+        let key = nanoid::nanoid!();
+        let val = 'c';
+        set(&key, &val, 60_000).await;
+        assert_eq!(get(&key).await, Some(val));
+
+        let key = nanoid::nanoid!();
+        let val = (1, 2);
+        set(&key, &val, 60_000).await;
+        assert_eq!(get(&key).await, Some(val));
+
+        let key = nanoid::nanoid!();
+        let val = vec![1, 2];
+        set(&key, &val, 60_000).await;
+        assert_eq!(get(&key).await, Some(val));
+    }
+
+    #[tokio::test]
     async fn get_test_large() {
         let data = ExampleData::default();
         set(&data.id, &data, 100_000).await;

@@ -30,14 +30,47 @@ mod tests {
             ExampleData::default(),
             ExampleData::default(),
         ];
-        let inserted = set(&one.id, &one, 10_000).await;
+        let inserted = set(&one.id, &one, 60_000).await;
         assert!(inserted >= 1_usize);
 
-        let inserted = set(&two.id, &two, 10_000).await;
+        let inserted = set(&two.id, &two, 60_000).await;
         assert!(inserted >= 2_usize);
 
-        let inserted = set(&three.id, &three, 10_000).await;
+        let inserted = set(&three.id, &three, 60_000).await;
         assert!(inserted >= 3_usize);
+    }
+
+    #[tokio::test]
+    async fn set_scalar_types() {
+        let key = nanoid::nanoid!();
+        let val = format!("some_string_{}", nanoid::nanoid!());
+        let inserted = set(&key, val, 60_000).await;
+        assert!(inserted >= 1_usize);
+
+        let key = nanoid::nanoid!();
+        let val = 8;
+        let inserted = set(&key, val, 60_000).await;
+        assert!(inserted >= 2_usize);
+
+        let key = nanoid::nanoid!();
+        let val = true;
+        let inserted = set(&key, val, 60_000).await;
+        assert!(inserted >= 3_usize);
+
+        let key = nanoid::nanoid!();
+        let val = 'c';
+        let inserted = set(&key, val, 60_000).await;
+        assert!(inserted >= 4_usize);
+
+        let key = nanoid::nanoid!();
+        let val = (1, 2);
+        let inserted = set(&key, val, 60_000).await;
+        assert!(inserted >= 5_usize);
+
+        let key = nanoid::nanoid!();
+        let val = vec![1, 2];
+        let inserted = set(&key, val, 60_000).await;
+        assert!(inserted >= 6_usize);
     }
 
     #[tokio::test]

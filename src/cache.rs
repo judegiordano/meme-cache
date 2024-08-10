@@ -59,9 +59,25 @@ mod tests {
     #[ignore = "memory footprint"]
     #[tokio::test]
     async fn footprint_test() {
-        for _ in 0..=10_000_000 {
+        for _ in 0..=1_000 {
             let data = ExampleData::default();
             set(&data.id, &data, 100_000).await;
+        }
+        let now = std::time::Instant::now();
+        let memory_size = footprint().await;
+        println!(
+            "footprint: {} MB in {:?}",
+            memory_size as f64 * 0.000001,
+            now.elapsed()
+        );
+    }
+
+    #[ignore = "scalar memory footprint"]
+    #[tokio::test]
+    async fn scalar_footprint_test() {
+        clear().await;
+        for i in 0..=1_000 {
+            set(i, i, 600_000).await;
         }
         let now = std::time::Instant::now();
         let memory_size = footprint().await;
