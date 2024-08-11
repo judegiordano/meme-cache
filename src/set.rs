@@ -19,12 +19,13 @@ pub async fn set(key: impl ToString, value: impl Serialize, expiration_in_ms: i6
 #[cfg(test)]
 mod tests {
 
-    use crate::{size, test::ExampleData};
+    use crate::{clear, size, test::ExampleData};
 
     use super::*;
 
     #[tokio::test]
     async fn set_test() {
+        clear().await;
         let [one, two, three] = [
             ExampleData::default(),
             ExampleData::default(),
@@ -42,6 +43,7 @@ mod tests {
 
     #[tokio::test]
     async fn set_scalar_types() {
+        clear().await;
         let key = nanoid::nanoid!();
         let val = format!("some_string_{}", nanoid::nanoid!());
         let inserted = set(&key, val, 60_000).await;
@@ -74,9 +76,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn threading_test() {
+    async fn tokio_tasks_test() {
+        clear().await;
         let mut handlers = vec![];
-        let tasks = 1_000;
+        let tasks = 10_000;
         for _ in 0..tasks {
             let handler = tokio::task::spawn(async {
                 let data = ExampleData::default();

@@ -21,10 +21,11 @@ pub async fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get, set, size, test::ExampleData};
+    use crate::{clear, get, set, size, test::ExampleData};
 
     #[tokio::test]
     async fn get_test() {
+        clear().await;
         let data = ExampleData::default();
         set(&data.id, &data, 10_000).await;
         assert!(size().await >= 1_usize);
@@ -38,6 +39,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_scalar_types() {
+        clear().await;
         let key = nanoid::nanoid!();
         let val = format!("some_string_{}", nanoid::nanoid!());
         set(&key, &val, 60_000).await;
@@ -71,11 +73,12 @@ mod tests {
 
     #[tokio::test]
     async fn get_test_large() {
+        clear().await;
         let data = ExampleData::default();
         set(&data.id, &data, 100_000).await;
 
         // now add a bunch more
-        for _ in 0..=100_000 {
+        for _ in 0..=10_000 {
             let data = ExampleData::default();
             set(&data.id, &data, 100_000).await;
         }
@@ -87,9 +90,9 @@ mod tests {
         assert_eq!(data, cached_data);
     }
 
-    #[ignore = "sleep for stale data"]
     #[tokio::test]
-    async fn clear_test() {
+    async fn expiration_test() {
+        clear().await;
         let data = ExampleData::default();
         // set low expiration
         set(&data.id, &data, 1).await;

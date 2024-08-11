@@ -54,13 +54,8 @@ mod tests {
     use nanoid::nanoid;
     use serde_json::Value;
 
-    use crate::{
-        cache::{entries, CACHE},
-        clear, footprint, purge_stale, set, size,
-        test::ExampleData,
-    };
+    use crate::{cache::entries, clear, footprint, purge_stale, set, size, test::ExampleData};
 
-    #[ignore = "list entries independently"]
     #[tokio::test]
     async fn entries_test() {
         clear().await;
@@ -77,14 +72,15 @@ mod tests {
 
     #[tokio::test]
     async fn size_test() {
+        clear().await;
         let data = ExampleData::default();
         set(&data.id, &data, 10_000).await;
         assert!(size().await >= 1_usize);
     }
 
-    #[ignore = "clear should happen last"]
     #[tokio::test]
     async fn clear_test() {
+        clear().await;
         let data = ExampleData::default();
         set(&data.id, &data, 10_000).await;
 
@@ -94,9 +90,9 @@ mod tests {
         assert!(size().await == 0_usize);
     }
 
-    #[ignore = "memory footprint"]
     #[tokio::test]
     async fn footprint_test() {
+        clear().await;
         for _ in 0..=1_000 {
             let data = ExampleData::default();
             set(&data.id, &data, 100_000).await;
@@ -110,7 +106,6 @@ mod tests {
         );
     }
 
-    #[ignore = "scalar memory footprint"]
     #[tokio::test]
     async fn scalar_footprint_test() {
         clear().await;
@@ -126,7 +121,6 @@ mod tests {
         );
     }
 
-    #[ignore = "purge stale"]
     #[tokio::test]
     async fn purge_stale_test() {
         clear().await;
@@ -141,7 +135,7 @@ mod tests {
         purge_stale().await;
         // half the data (which is stale) should now be removed
         assert!(size().await == 500);
-        CACHE.lock().await.iter().for_each(|(key, value)| {
+        entries().await.iter().for_each(|(key, value)| {
             // expiration should not be reached
             assert_eq!(value.expiration_in_ms, 600_000);
             let key = key.parse::<i32>().unwrap();

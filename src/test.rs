@@ -1,8 +1,6 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::clear;
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Address {
     pub street: String,
@@ -45,14 +43,4 @@ impl Default for ExampleData {
                 .collect(),
         }
     }
-}
-
-// clear cache, make dummy data
-#[allow(dead_code)]
-pub async fn before_each() -> Vec<ExampleData> {
-    clear().await;
-    (0..=10_000)
-        .into_iter()
-        .map(|_| ExampleData::default())
-        .collect::<Vec<_>>()
 }

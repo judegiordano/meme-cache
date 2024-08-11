@@ -34,6 +34,7 @@ mod tests {
 
     #[tokio::test]
     async fn remove_test() {
+        clear().await;
         let key = nanoid::nanoid!();
         set(&key, &key, 600_000).await;
         // prove item was set
