@@ -1,5 +1,7 @@
 use crate::cache::CACHE;
 
+// NOTE: this doesnt technically remove the oldest entry,
+// just whichever one is sorted as last in the Btree
 pub async fn remove_last() {
     let mut cache = CACHE.lock().await;
     let item = cache.last_entry().unwrap();
@@ -17,7 +19,7 @@ pub async fn remove(key: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get, remove, set};
+    use crate::{clear, get, remove, remove_last, set, size};
 
     #[tokio::test]
     async fn remove_test() {
@@ -29,5 +31,16 @@ mod tests {
         assert!(remove(&key).await);
         // prove item is gone
         assert_eq!(get::<String>(&key).await, None);
+    }
+
+    #[tokio::test]
+    async fn remove_last_test() {
+        clear().await;
+        for i in 1..=100 {
+            set(&i, &i, 600_000).await;
+        }
+        assert_eq!(size().await, 100);
+        remove_last().await;
+        assert_eq!(size().await, 99);
     }
 }
