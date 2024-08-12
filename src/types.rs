@@ -4,7 +4,8 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 use tokio::sync::Mutex;
 
-const FIVE_MINUTES_IN_MS: i64 = (1_000 * 60) * 5;
+// five minutes in ms (1,000 ms -> 1 sec -> 1 min * 5)
+pub const DEFAULT_EXPIRATION: i64 = (1_000 * 60) * 5;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Metadata {
@@ -16,7 +17,7 @@ pub struct Metadata {
 impl Default for Metadata {
     fn default() -> Self {
         Self {
-            expiration_in_ms: FIVE_MINUTES_IN_MS,
+            expiration_in_ms: DEFAULT_EXPIRATION,
             set_at: Utc::now().timestamp_millis(),
             data: Default::default(),
         }

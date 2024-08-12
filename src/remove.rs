@@ -40,7 +40,9 @@ pub async fn remove_oldest() -> Option<Entry> {
 mod tests {
     use std::time::Instant;
 
-    use crate::{clear, entries, get, remove, remove_last, remove_oldest, set, size};
+    use crate::{
+        clear, entries, get, remove, remove_last, remove_oldest, set, size, test::sleep_ms,
+    };
 
     #[tokio::test]
     async fn remove_test() {
@@ -78,7 +80,7 @@ mod tests {
         clear().await;
         let key = nanoid::nanoid!();
         set(&key, &key, 600_000).await;
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        sleep_ms(10);
         for i in 1..=100_000 {
             set(&i, &i, 600_000).await;
         }

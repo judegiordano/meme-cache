@@ -1,7 +1,7 @@
 use chrono::Utc;
 use serde::de::DeserializeOwned;
 
-use crate::cache::CACHE;
+use crate::{cache::CACHE, types::Metadata};
 
 pub async fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
     let mut cache = CACHE.lock().await;
@@ -19,11 +19,24 @@ pub async fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
     None
 }
 
+pub async fn get_metadata(key: &str) -> Option<Metadata> {
+    let cache = CACHE.lock().await;
+    if let Some(exists) = cache.get(key) {
+        return Some(exists.to_owned());
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::Instant;
 
-    use crate::{clear, get, set, size, test::ExampleData};
+    use chrono::Utc;
+
+    use crate::{
+        clear, get, get_metadata, set, size,
+        test::{sleep_ms, ExampleData},
+    };
 
     #[tokio::test]
     async fn get_test() {
@@ -37,6 +50,23 @@ mod tests {
 
         let cached_data = exists.unwrap();
         assert_eq!(data, cached_data);
+    }
+
+    #[tokio::test]
+    async fn get_metadata_test() {
+        clear().await;
+        let now = Utc::now().timestamp_millis();
+        sleep_ms(1);
+        let data = ExampleData::default();
+        set(&data.id, &data, 10_000).await;
+        assert!(size().await >= 1_usize);
+
+        let exists = get_metadata(&data.id).await;
+        assert!(exists.is_some());
+
+        let cached_metadata = exists.unwrap();
+        assert_eq!(cached_metadata.expiration_in_ms, 10_000);
+        assert!(cached_metadata.set_at > now);
     }
 
     #[tokio::test]
@@ -100,7 +130,7 @@ mod tests {
         let data = ExampleData::default();
         // set low expiration
         set(&data.id, &data, 1).await;
-        std::thread::sleep(std::time::Duration::from_millis(1));
+        sleep_ms(1);
 
         assert!(size().await >= 1_usize);
 

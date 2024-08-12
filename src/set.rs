@@ -1,13 +1,21 @@
 use serde::Serialize;
 
-use crate::{cache::CACHE, types::Metadata};
+use crate::{
+    cache::CACHE,
+    types::{Metadata, DEFAULT_EXPIRATION},
+};
 
-pub async fn set(key: impl ToString, value: impl Serialize, expiration_in_ms: i64) -> usize {
+pub async fn set(
+    key: impl ToString,
+    value: impl Serialize,
+    expiration_in_ms: impl Into<Option<i64>>,
+) -> usize {
     let mut cache = CACHE.lock().await;
+    let expiration: Option<i64> = expiration_in_ms.into();
     cache.insert(
         key.to_string(),
         Metadata {
-            expiration_in_ms,
+            expiration_in_ms: expiration.unwrap_or(DEFAULT_EXPIRATION),
             data: serde_json::to_value(value).unwrap(),
             ..Default::default()
         },
@@ -18,7 +26,7 @@ pub async fn set(key: impl ToString, value: impl Serialize, expiration_in_ms: i6
 #[cfg(test)]
 mod tests {
 
-    use crate::{clear, size, test::ExampleData};
+    use crate::{clear, get, size, test::ExampleData};
 
     use super::*;
 
@@ -38,6 +46,21 @@ mod tests {
 
         let inserted = set(&three.id, &three, 60_000).await;
         assert!(inserted >= 3_usize);
+    }
+
+    #[tokio::test]
+    async fn set_with_default_expiration() {
+        clear().await;
+        let data = ExampleData::default();
+        let inserted = set(&data.id, &data, None).await;
+        assert!(inserted >= 1_usize);
+
+        let data = get::<ExampleData>(&data.id).await;
+        assert!(data.is_some());
+
+        let cache = CACHE.lock().await;
+        let metadata = cache.get(&data.unwrap().id).unwrap();
+        assert_eq!(metadata.expiration_in_ms, DEFAULT_EXPIRATION);
     }
 
     #[tokio::test]

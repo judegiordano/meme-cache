@@ -39,7 +39,7 @@ pub async fn purge_stale() -> usize {
 
 // value in bytes
 pub async fn footprint() -> usize {
-    CACHE.lock().await.iter().fold(0, |mut acc, val| {
+    CACHE.lock().await.values().fold(0, |mut acc, val| {
         acc += size_of_val(&val);
         acc
     })
@@ -52,7 +52,11 @@ mod tests {
     use nanoid::nanoid;
     use serde_json::Value;
 
-    use crate::{cache::entries, clear, footprint, purge_stale, set, size, test::ExampleData};
+    use crate::{
+        cache::entries,
+        clear, footprint, purge_stale, set, size,
+        test::{sleep_ms, ExampleData},
+    };
 
     #[tokio::test]
     async fn entries_test() {
@@ -121,6 +125,24 @@ mod tests {
         );
     }
 
+    #[ignore = "this creates about 4mb of memory"]
+    #[tokio::test]
+    async fn larger_footprint_test() {
+        clear().await;
+        for _ in 0..=500_000 {
+            let data = ExampleData::default();
+            set(&data.id, &data, 100_000).await;
+        }
+        let now = std::time::Instant::now();
+        let memory_size = footprint().await;
+        println!(
+            "larger footprint: {} MB in {:?}",
+            memory_size as f64 * 0.000001,
+            now.elapsed()
+        );
+        clear().await;
+    }
+
     #[tokio::test]
     async fn purge_stale_test() {
         clear().await;
@@ -131,7 +153,7 @@ mod tests {
         }
         assert!(size().await == 10_000);
         // wait for data to expire
-        std::thread::sleep(std::time::Duration::from_millis(1));
+        sleep_ms(1);
         let start = Instant::now();
         let purged = purge_stale().await;
         // should have purged half
