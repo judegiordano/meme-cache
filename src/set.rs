@@ -1,7 +1,6 @@
-use chrono::Utc;
 use serde::Serialize;
 
-use crate::cache::{Metadata, CACHE};
+use crate::{cache::CACHE, types::Metadata};
 
 pub async fn set(key: impl ToString, value: impl Serialize, expiration_in_ms: i64) -> usize {
     let mut cache = CACHE.lock().await;
@@ -9,8 +8,8 @@ pub async fn set(key: impl ToString, value: impl Serialize, expiration_in_ms: i6
         key.to_string(),
         Metadata {
             expiration_in_ms,
-            set_at: Utc::now().timestamp_millis(),
             data: serde_json::to_value(value).unwrap(),
+            ..Default::default()
         },
     );
     cache.len()

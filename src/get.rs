@@ -21,6 +21,8 @@ pub async fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Instant;
+
     use crate::{clear, get, set, size, test::ExampleData};
 
     #[tokio::test]
@@ -83,8 +85,10 @@ mod tests {
             set(&data.id, &data, 100_000).await;
         }
 
+        let start = Instant::now();
         let exists = get::<ExampleData>(&data.id).await;
         assert!(exists.is_some());
+        println!("get operation done in: {:?}", start.elapsed());
 
         let cached_data = exists.unwrap();
         assert_eq!(data, cached_data);

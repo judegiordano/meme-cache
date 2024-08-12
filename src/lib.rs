@@ -2,6 +2,7 @@ mod cache;
 mod get;
 mod remove;
 mod set;
+mod types;
 
 #[cfg(test)]
 mod test;

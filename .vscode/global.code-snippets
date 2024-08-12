@@ -1,0 +1,19 @@
+{
+    "Pretty Print": {
+        "scope": "rust",
+        "description": "pretty print println!",
+        "prefix": "print",
+        "body": [
+            "println!(\"{:#?}\", ${0});"
+        ]
+    },
+    "Derive Debug Attriubte": {
+        "scope": "rust",
+        "description": "time operation",
+        "prefix": "time",
+        "body": [
+            "let start = Instant::now();",
+            "println!(\"${0} operation done in: {:?}\", start.elapsed());"
+        ]
+    }
+}
