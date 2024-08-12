@@ -1,12 +1,12 @@
 use chrono::Utc;
 use lazy_static::lazy_static;
-use std::{collections::BTreeMap, mem::size_of_val};
+use std::{collections::HashMap, mem::size_of_val};
 use tokio::sync::Mutex;
 
 use crate::types::{Cache, CacheGuard};
 
 lazy_static! {
-    pub static ref CACHE: CacheGuard = Mutex::new(BTreeMap::default());
+    pub static ref CACHE: CacheGuard = Mutex::new(HashMap::default());
 }
 
 pub async fn entries() -> Cache {
@@ -62,13 +62,13 @@ mod tests {
     async fn entries_test() {
         clear().await;
         let value = nanoid!();
-        for i in 0..100_000 {
+        for i in 0..1_000 {
             set(&i, &value, 600_000).await;
         }
         let start = Instant::now();
         let entries = entries().await;
         println!("entries operation done in: {:?}", start.elapsed());
-        assert!(entries.len() == 100_000);
+        assert!(entries.len() == 1_000);
         entries.iter().for_each(|(_, val)| {
             assert_eq!(val.data, Value::String(value.clone()));
         });

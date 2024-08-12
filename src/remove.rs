@@ -1,17 +1,5 @@
 use crate::{cache::CACHE, types::Entry};
 
-// NOTE: this doesnt technically remove the oldest entry,
-// just whichever one is sorted as last in the Btree
-pub async fn remove_last() -> Option<Entry> {
-    let mut cache = CACHE.lock().await;
-    let item = cache.last_entry().unwrap();
-    let id = item.key().clone();
-    if let Some((key, value)) = cache.remove_entry(&id) {
-        return Some((key, value));
-    }
-    None
-}
-
 pub async fn remove(key: &str) -> Option<Entry> {
     let mut cache = CACHE.lock().await;
     if let Some(removed) = cache.remove(key) {
@@ -40,9 +28,7 @@ pub async fn remove_oldest() -> Option<Entry> {
 mod tests {
     use std::time::Instant;
 
-    use crate::{
-        clear, entries, get, remove, remove_last, remove_oldest, set, size, test::sleep_ms,
-    };
+    use crate::{clear, entries, get, remove, remove_oldest, set, test::sleep_ms};
 
     #[tokio::test]
     async fn remove_test() {
@@ -62,17 +48,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn remove_last_test() {
+    async fn remove_oldest_quick_test() {
         clear().await;
-        for i in 1..=10_000 {
+        let key = nanoid::nanoid!();
+        set(&key, &key, 600_000).await;
+        sleep_ms(10);
+        for i in 1..=100 {
             set(&i, &i, 600_000).await;
         }
-        assert_eq!(size().await, 10_000_usize);
-
         let start = Instant::now();
-        remove_last().await;
-        println!("remove last operation done in: {:?}", start.elapsed());
-        assert_eq!(size().await, 9_999_usize);
+        let removed = remove_oldest().await;
+        println!(
+            "quicker cache remove oldest operation done in: {:?}",
+            start.elapsed()
+        );
+        assert!(removed.is_some());
+        let (removed_key, removed_value) = removed.unwrap();
+        assert_eq!(key, removed_key);
+        assert_eq!(removed_value.data, key);
+        for (_, metadata) in entries().await {
+            assert!(metadata.set_at > removed_value.set_at)
+        }
     }
 
     #[tokio::test]

@@ -1,7 +1,7 @@
 use chrono::Utc;
+use fnv::FnvHashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::BTreeMap;
 use tokio::sync::Mutex;
 
 // five minutes in ms (1,000 ms -> 1 sec -> 1 min * 5)
@@ -24,6 +24,6 @@ impl Default for Metadata {
     }
 }
 
-pub type Cache = BTreeMap<String, Metadata>;
+pub type Cache = FnvHashMap<String, Metadata>;
 pub type CacheGuard = Mutex<Cache>;
 pub type Entry = (String, Metadata);
