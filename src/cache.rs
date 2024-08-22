@@ -37,12 +37,15 @@ pub async fn purge_stale() -> usize {
     purged_data
 }
 
+#[allow(clippy::cast_precision_loss)]
 // value in bytes
 pub async fn footprint() -> usize {
-    CACHE.lock().await.values().fold(0, |mut acc, val| {
-        acc += size_of_val(&val);
+    let size = CACHE.lock().await.values().fold(0, |mut acc, val| {
+        acc += size_of_val(val);
         acc
-    })
+    });
+    tracing::debug!("footprint in MB: {:?}", size as f64 * 0.000_001);
+    size
 }
 
 #[cfg(test)]
@@ -105,7 +108,7 @@ mod tests {
         let memory_size = footprint().await;
         println!(
             "footprint: {} MB in {:?}",
-            memory_size as f64 * 0.000001,
+            memory_size as f64 * 0.000_001,
             now.elapsed()
         );
     }

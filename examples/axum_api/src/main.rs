@@ -1,8 +1,10 @@
 use anyhow::Result;
 use axum::{extract::Path, response::IntoResponse, routing, Json};
-use meme_cache::{footprint, get, set, size};
+use meme_cache::{footprint, get, set};
 use serde_json::Value;
 use tokio::net::TcpListener;
+use tracing::Level;
+use tracing_subscriber::FmtSubscriber;
 
 pub async fn list_all_todos() -> Result<Vec<Value>> {
     let response = reqwest::get("https://jsonplaceholder.typicode.com/todos").await?;
@@ -23,9 +25,7 @@ pub async fn list_all_handler() -> impl IntoResponse {
     }
     let json = list_all_todos().await.unwrap();
     set("all_todos", &json, 10_000).await;
-    let memory = footprint().await;
-    let len = size().await;
-    println!("cache memory: {memory} of items: {len}");
+    footprint().await;
     Json(json)
 }
 
@@ -37,14 +37,17 @@ pub async fn read_one(id: Path<String>) -> impl IntoResponse {
     }
     let json = read_one_todo(id.to_string()).await.unwrap();
     set(&id, &json, 10_000).await;
-    let memory = footprint().await;
-    let len = size().await;
-    println!("cache memory: {memory} of items: {len}");
+    let _ = footprint().await;
     Json(json)
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::DEBUG)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber)?;
+    // launch
     let listener = TcpListener::bind("0.0.0.0:3000").await?;
     let app = axum::Router::new()
         .route("/", routing::get(list_all_handler))

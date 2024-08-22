@@ -1,13 +1,13 @@
 use crate::{cache::CACHE, types::Entry};
 
 pub async fn remove(key: &str) -> Option<Entry> {
-    let mut cache = CACHE.lock().await;
-    if let Some(removed) = cache.remove(key) {
+    if let Some(removed) = CACHE.lock().await.remove(key) {
         return Some((key.to_string(), removed));
     }
     None
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub async fn remove_oldest() -> Option<Entry> {
     let mut cache = CACHE.lock().await;
     // convert to vec for sorting
@@ -19,6 +19,7 @@ pub async fn remove_oldest() -> Option<Entry> {
     v.sort_by(|(_, a), (_, b)| b.set_at.cmp(&a.set_at));
     if let Some((k, v)) = v.last() {
         cache.remove(k);
+        drop(cache);
         return Some((k.to_owned(), v.to_owned()));
     }
     None

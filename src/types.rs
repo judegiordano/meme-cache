@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::Mutex;
 
-// five minutes in ms (1,000 ms -> 1 sec -> 1 min * 5)
+/// five minutes in ms (1,000 ms -> 1 sec -> 1 min * 5)
 pub const DEFAULT_EXPIRATION: i64 = (1_000 * 60) * 5;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -19,7 +19,7 @@ impl Default for Metadata {
         Self {
             expiration_in_ms: DEFAULT_EXPIRATION,
             set_at: Utc::now().timestamp_millis(),
-            data: Default::default(),
+            data: Value::default(),
         }
     }
 }

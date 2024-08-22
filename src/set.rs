@@ -11,12 +11,19 @@ pub async fn set(
     expiration_in_ms: impl Into<Option<i64>>,
 ) -> usize {
     let mut cache = CACHE.lock().await;
-    let expiration: Option<i64> = expiration_in_ms.into();
+    let key = key.to_string();
+    let data = match serde_json::to_value(value) {
+        Ok(json) => json,
+        Err(err) => {
+            tracing::error!("[ERROR SERIALIZING]: {:?} {:?}", key, err.to_string());
+            return cache.len();
+        }
+    };
     cache.insert(
-        key.to_string(),
+        key,
         Metadata {
-            expiration_in_ms: expiration.unwrap_or(DEFAULT_EXPIRATION),
-            data: serde_json::to_value(value).unwrap(),
+            expiration_in_ms: expiration_in_ms.into().unwrap_or(DEFAULT_EXPIRATION),
+            data,
             ..Default::default()
         },
     );

@@ -10,7 +10,13 @@ pub async fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
         let now = Utc::now().timestamp_millis();
         let diff = now - exists.set_at;
         if diff < exists.expiration_in_ms {
-            let json = serde_json::from_value::<T>(exists.data.clone()).unwrap();
+            let json = match serde_json::from_value::<T>(exists.data.clone()) {
+                Ok(json) => json,
+                Err(err) => {
+                    tracing::error!("[ERROR DESERIALIZING]: {:?} {:?}", key, err.to_string());
+                    return None;
+                }
+            };
             return Some(json);
         }
         tracing::debug!("data stale; removing...");
@@ -19,9 +25,9 @@ pub async fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
     None
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub async fn get_metadata(key: &str) -> Option<Metadata> {
-    let cache = CACHE.lock().await;
-    if let Some(exists) = cache.get(key) {
+    if let Some(exists) = CACHE.lock().await.get(key) {
         return Some(exists.to_owned());
     }
     None
